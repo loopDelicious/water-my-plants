@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@metamodules/postgres": "^1.2.1",
+    "@metamodules/redis": "^2.1.1",
     "deploy-node-app": "^1.4.3",
     "dotenv": "^8.0.0",
     "react": "^16.8.6",
