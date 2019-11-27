@@ -1,4 +1,16 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+### Get Started
+
+Install dependencies.
+
+### `npm install`
+
+Run the backend API on `http://localhost:4000`. Requests can be made against the endpoints described at `./src/api/index.js`.
+
+### `npm start`
+
+---
+
+This project was bootstrapped with [Create Node App](https://github.com/kubesail/create-node-app#readme) using Redis (instead of the default Postgres).
 
 ## Available Scripts
 
