@@ -1,5 +1,6 @@
 const express = require("express");
 const bodyParser = require("body-parser");
+const moment = require("moment");
 require("dotenv").config();
 const redis = require("@metamodules/redis")();
 
@@ -11,23 +12,33 @@ app.use(bodyParser.urlencoded({ extended: false }));
 
 app.get("/water", (req, res) => {
   // https://redis.io/commands/zrangebyscore
-  let args = ["series", "-inf", "+inf", "WITHSCORES"];
-  redis.ZRANGEBYSCORE(args, function(err, measurements) {
+  let args = ["timeseries", "-inf", "+inf", "WITHSCORES"];
+  redis.ZRANGEBYSCORE(args, function(err, data) {
     if (err) throw err;
 
-    res.send(measurements);
+    // format the data
+    let timeseries = [];
+    for (let i = 0; i < data.length; i += 2) {
+      timeseries.push([+new Date(data[i]), data[i + 1]]);
+    }
+
+    res.send(timeseries);
   });
 });
 
 app.post("/water", (req, res) => {
   // https://redis.io/commands/zadd
-  let timestamp = +new Date();
+  let timestamp = moment().format("YYYY-MM-DD HH:mm:ss");
   let moistureValue = req.body.moisture;
-  let args = ["series", moistureValue, timestamp];
-  redis.zadd(args, function(err, response) {
-    if (err) throw err;
-    res.send(`${moistureValue} added`);
-  });
+  let args = ["timeseries", moistureValue, timestamp];
+  if (isNaN(moistureValue)) {
+    res.send(`${moistureValue} is not a number`);
+  } else {
+    redis.zadd(args, function(err, response) {
+      if (err) throw err;
+      res.send(`${moistureValue} added`);
+    });
+  }
 });
 
 app.delete("/water", (req, res) => {
