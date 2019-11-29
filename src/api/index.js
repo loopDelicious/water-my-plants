@@ -10,22 +10,36 @@ const port = 4000;
 // parse application/x-www-form-urlencoded
 app.use(bodyParser.urlencoded({ extended: false }));
 
+// get moisture values
 app.get("/water", (req, res) => {
-  // https://redis.io/commands/zrangebyscore
-  let args = ["timeseries", "-inf", "+inf", "WITHSCORES"];
-  redis.ZRANGEBYSCORE(args, function(err, data) {
-    if (err) throw err;
-
-    // format the data
-    let timeseries = [];
-    for (let i = 0; i < data.length; i += 2) {
-      timeseries.push([+new Date(data[i]), data[i + 1]]);
-    }
-
-    res.send(timeseries);
-  });
+  // if additional parameters sent, limit the scope of the query
+  if (req.body.records && isNaN(req.body.records)) {
+    res.send(`${req.body.records} is not a number`);
+  } else {
+    let records = req.body.records ? req.body.records : -1;
+    // https://redis.io/commands/zrangebyscore
+    let args = [
+      "timeseries",
+      "-inf",
+      "+inf",
+      "WITHSCORES",
+      "LIMIT",
+      0,
+      records
+    ];
+    redis.ZRANGEBYSCORE(args, function(err, data) {
+      if (err) throw err;
+      // format the data
+      let timeseries = [];
+      for (let i = 0; i < data.length; i += 2) {
+        timeseries.push([+new Date(data[i]), data[i + 1]]);
+      }
+      res.send(timeseries);
+    });
+  }
 });
 
+// add a new nmoisture value
 app.post("/water", (req, res) => {
   // https://redis.io/commands/zadd
   let timestamp = moment().format("YYYY-MM-DD HH:mm:ss");
